@@ -1,0 +1,9 @@
+<%-include('layouts/start.ejs')%>
+<% if(users.length>0){ %>
+    <ul>
+    <%for(let user of users) {%>
+        <li><%= user.username%></li>
+    <%}%>
+    </ul>
+    <%}%>
+<%-include('layouts/end.ejs')%>
