@@ -8,10 +8,15 @@
     "start": "nodemon app.js",
     "start-server": "node app.js"
   },
-  "author": "Maximilian Schwarzmüller",
+  "author": "Fakeha Rahman",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^1.18.3"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "*.json"
+    ]
   },
   "dependencies": {
     "body-parser": "^1.18.3",
