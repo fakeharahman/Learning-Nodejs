@@ -17,6 +17,14 @@
             <% }%>
 
         </ul>
+        <hr>
+        <div class="centered">
+
+            <form action="/create-order" method="POST">
+                <!-- <input type="hidden" name=""> -->
+                <button class='btn' type="submit">Checkout</button>
+            </form>
+        </div>
         <% }else{ %>
         <h1>Nothing here! :(</h1>
         <% }%>
