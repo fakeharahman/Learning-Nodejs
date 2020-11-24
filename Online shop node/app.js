@@ -15,7 +15,7 @@ const MONGODB_URI =
 const app = express();
 const store = new mondoDBstore({
   uri: MONGODB_URI,
-  collection: 'sessions'
+  collection: "sessions",
 });
 
 app.set("view engine", "ejs");
@@ -30,11 +30,17 @@ const User = require("./models/users");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
-  session({ secret: "my secret", resave: false, saveUninitialized: false, store: store })
+  session({
+    secret: "my secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
 );
 
 app.use((req, res, next) => {
-  User.findById("5fb39c4c69228933d8cbbb72")
+  if (!req.session.user) {return next();}
+  User.findById(req.session.user._id)
     .then((user) => {
       req.user = user;
       next();
