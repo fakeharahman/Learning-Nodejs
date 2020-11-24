@@ -1,25 +1,25 @@
 <%- include('../includes/head.ejs') %>
-</head>
+    <link rel="stylesheet" href="/css/orders.css">
+    </head>
 
-<body>
-    <%- include('../includes/navigation.ejs') %>
-    <main>
-        <% if (orders.length === 0){ %>
-            <h1>Nothing here yet :(</h1>
-            <% }else{%>
-                <ul>
-                <% for(let order of orders){ %>
-                    <li>
-                        <h1> # <%= order._id %></h1>
-                        <ul>
-                            <% order.products.forEach(p=>{ %>
-                            <li>  <p><%= p.product.title %> (<%= p.qty %> )</p></li>
-                            <% }) %>
-                        </ul>
-                    </li>
-                    <% }%>
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+        <main>
+            <% if (orders.length <= 0) { %>
+                <h1>Nothing there!</h1>
+            <% } else { %>
+                <ul class="orders">
+                    <% orders.forEach(order => { %>
+                        <li class="orders__item">
+                            <h1>Order - # <%= order._id %></h1>
+                            <ul class="orders__products">
+                                <% order.products.forEach(p => { %>
+                                    <li class="orders__products-item"><%= p.product.title %> (<%= p.qty %>)</li>
+                                <% }); %>
+                            </ul>
+                        </li>
+                    <% }); %>
                 </ul>
-                <% }%>
-    
-    </main>
-    <%- include('../includes/end.ejs') %>
+            <% } %>
+        </main>
+        <%- include('../includes/end.ejs') %>
