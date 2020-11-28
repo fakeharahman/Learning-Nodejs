@@ -31,7 +31,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
   session({
-    secret: "my secret",
+    secret: "my secret token",
     resave: false,
     saveUninitialized: false,
     store: store,
@@ -56,16 +56,16 @@ app.use(errorController.get404);
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
-    User.findOne().then((user) => {
-      if (!user) {
-        const user = new User({
-          name: "Fakeha",
-          email: "test@test.com",
-          cart: { itmes: [] },
-        });
-        user.save();
-      }
-    });
+    // User.findOne().then((user) => {
+    //   if (!user) {
+    //     const user = new User({
+    //       name: "Fakeha",
+    //       email: "test@test.com",
+    //       cart: { itmes: [] },
+    //     });
+    //     user.save();
+    //   }
+    // });
 
     app.listen(6969);
   })
