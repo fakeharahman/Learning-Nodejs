@@ -1,5 +1,14 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/users");
+const nodemailer = require("nodemailer");
+const sendgrid = require("nodemailer-sendgrid");
+
+const transporter = nodemailer.createTransport(
+  sendgrid({
+    apiKey:
+      "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",
+  })
+);
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash("error");
@@ -28,7 +37,6 @@ exports.getSignup = (req, res, next) => {
     pageTitle: "Signup",
     isAuth: false,
     errorMessage: message,
-
   });
 };
 
@@ -86,10 +94,18 @@ exports.postSignup = (req, res, next) => {
           return user.save();
         })
         .then(() => {
+          return transporter.sendMail({
+            to: email,
+            from: "rahman.tanzilur@outlook.com",
+            subject: "yo",
+            html:
+              "<h4> Hey Fakeha, </h4> <p> Thanks for being in my life. You are the best sister ever. Mama precious little boy, Tanzii </p>",
+          });
+        })
+        .then(() => {
           res.redirect("/login");
         });
     })
-
     .catch((err) => console.log(err));
 };
 
