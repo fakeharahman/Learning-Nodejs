@@ -1,4 +1,5 @@
 // const { response } = require("express");
+const { validationResult } = require("express-validator/check");
 const Product = require("../models/product");
 
 exports.getAddProduct = (req, res, next) => {
@@ -9,14 +10,33 @@ exports.getAddProduct = (req, res, next) => {
     pageTitle: "Add Product",
     path: "/admin/add-product",
     editing: false,
+    hasError: false,
+    validationErrors: []
   });
 };
 
 exports.postAddProduct = (req, res, next) => {
+  const errors = validationResult(req);
   const title = req.body.title;
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
+  if (!errors.isEmpty()) {
+    return res.status(422).render("admin/edit-product", {
+      pageTitle: "Add Product",
+      path: "/admin/add-product",
+      editing: false,
+      hasError: true,
+      errorMessage: errors.array()[0].msg,
+      validationErrors: errors.array(),
+      product: {
+        title: title,
+        description: description,
+        price: price,
+        imageUrl: imageUrl,
+      },
+    });
+  }
   const product = new Product({
     title: title,
     price: price,
@@ -51,6 +71,8 @@ exports.getEditProduct = (req, res, next) => {
         pageTitle: "Edit Product",
         path: "/admin/edit-product",
         editing: editMode,
+        hasError: false,
+        validationErrors: [],
         product: product,
       });
     })
@@ -63,6 +85,24 @@ exports.postEditProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).render("admin/edit-product", {
+      pageTitle: "Edit Product",
+      path: "/admin/edit-product",
+      editing: true,
+      hasError: true,
+      errorMessage: errors.array()[0].msg,
+      validationErrors: errors.array(),
+      product: {
+        title: title,
+        description: description,
+        price: price,
+        imageUrl: imageUrl,
+        _id:id
+      },
+    });
+  }
   Product.findById(id)
     .then((prod) => {
       if (prod.userId.toString() !== req.user._id.toString()) {
@@ -85,7 +125,7 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   console.log(req.body.id);
-  Product.deleteOne({_id:req.body.id, userId: req.user._id}).then(() => {
+  Product.deleteOne({ _id: req.body.id, userId: req.user._id }).then(() => {
     res.redirect("/admin/products");
   });
 };

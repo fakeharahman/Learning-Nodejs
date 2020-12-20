@@ -33,7 +33,7 @@ const authRoutes = require("./routes/auth");
 const User = require("./models/users");
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"))); //to add css files
 app.use(
   session({
     secret: "my secret token",
