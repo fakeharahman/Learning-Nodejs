@@ -19,10 +19,14 @@
     ]
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
+    "connect-mongodb-session": "^2.4.1",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
+    "express-session": "^1.17.1",
+    "express-sesssion": "^1.15.5",
     "mongodb": "^3.6.2",
     "mongoose": "^5.10.13",
     "mysql2": "^2.1.0",

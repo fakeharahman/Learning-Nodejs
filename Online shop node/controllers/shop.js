@@ -9,6 +9,8 @@ exports.getProducts = (req, res, next) => {
         prods: products,
         pageTitle: "All Products",
         path: "/products",
+        isAuth: req.session.isAuth
+
       });
     })
     .catch((err) => console.log(err));
@@ -24,6 +26,8 @@ exports.getProduct = (req, res, next) => {
         product: product,
         pageTitle: product.title,
         path: "/products",
+        isAuth: req.session.isAuth
+
       });
     })
     .catch((err) => console.log(err));
@@ -36,12 +40,15 @@ exports.getIndex = (req, res, next) => {
         prods: products,
         pageTitle: "Shop",
         path: "/",
+        isAuth: req.session.isAuth
+
       });
     })
     .catch((err) => console.log(err));
 };
 
 exports.getCart = (req, res, next) => {
+  console.log(req.user);
   req.user
     .populate("cart.items.productId")
     .execPopulate()
@@ -50,10 +57,13 @@ exports.getCart = (req, res, next) => {
       const products = user.cart.items;
       // console.log(cart);
       // cart.getProducts().then((products) => {
+        // console.log(req.session);
       res.render("shop/cart", {
         path: "/cart",
         pageTitle: "Your Cart",
         products: products,
+        isAuth: req.session.isAuth
+
         // });
       });
     })
@@ -120,6 +130,8 @@ exports.getOrders = (req, res, next) => {
         path: "/orders",
         pageTitle: "Your Orders",
         orders: orders,
+        isAuth: req.session.isAuth
+
       });
     })
     .catch((err) => console.log(err));
