@@ -2,15 +2,13 @@
 const Product = require("../models/product");
 
 exports.getAddProduct = (req, res, next) => {
-  if(!req.session.isAuth){
-    res.redirect('/login')
+  if (!req.session.isAuth) {
+    res.redirect("/login");
   }
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
     path: "/admin/add-product",
     editing: false,
-    isAuth: req.session.isAuth
-
   });
 };
 
@@ -54,7 +52,6 @@ exports.getEditProduct = (req, res, next) => {
         path: "/admin/edit-product",
         editing: editMode,
         product: product,
-        isAuth: req.session.isAuth
       });
     })
     .catch((err) => console.log(err));
@@ -68,37 +65,41 @@ exports.postEditProduct = (req, res, next) => {
   const description = req.body.description;
   Product.findById(id)
     .then((prod) => {
+      if (prod.userId.toString() !== req.user._id.toString()) {
+        return res.redirect("/");
+      }
       prod.title = title;
       prod.price = price;
       prod.imageUrl = imageUrl;
       prod.description = description;
-      return prod.save();
-    })
-    .then((response) => {
-      res.redirect("/admin/products");
-      console.log("UPDATED PRODUCT");
+      return prod
+        .save()
+        .then((response) => {
+          res.redirect("/admin/products");
+          console.log("UPDATED PRODUCT");
+        })
+        .catch((err) => console.log(err));
     })
     .catch((err) => console.log(err));
 };
 
 exports.postDeleteProduct = (req, res, next) => {
   console.log(req.body.id);
-  Product.findByIdAndDelete(req.body.id).then(() => {
+  Product.deleteOne({_id:req.body.id, userId: req.user._id}).then(() => {
     res.redirect("/admin/products");
   });
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.find()
-  // .select('title price')
-  .populate('userId')
+  Product.find({ userId: req.user._id })
+    // .select('title price')
+    .populate("userId")
     .then((products) => {
       console.log(products.userId);
       res.render("admin/products", {
         prods: products,
         pageTitle: "Admin Products",
         path: "/admin/products",
-        isAuth: req.session.isAuth
       });
     })
     .catch((err) => console.log(err));
