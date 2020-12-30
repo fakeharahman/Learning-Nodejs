@@ -9,10 +9,13 @@ exports.getProducts = (req, res, next) => {
         prods: products,
         pageTitle: "All Products",
         path: "/products",
-
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getProduct = (req, res, next) => {
@@ -25,10 +28,13 @@ exports.getProduct = (req, res, next) => {
         product: product,
         pageTitle: product.title,
         path: "/products",
-
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getIndex = (req, res, next) => {
@@ -38,10 +44,13 @@ exports.getIndex = (req, res, next) => {
         prods: products,
         pageTitle: "Shop",
         path: "/",
-        
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getCart = (req, res, next) => {
@@ -54,7 +63,7 @@ exports.getCart = (req, res, next) => {
       const products = user.cart.items;
       // console.log(cart);
       // cart.getProducts().then((products) => {
-        // console.log(req.session);
+      // console.log(req.session);
       res.render("shop/cart", {
         path: "/cart",
         pageTitle: "Your Cart",
@@ -63,7 +72,11 @@ exports.getCart = (req, res, next) => {
         // });
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
 exports.postCart = (req, res, next) => {
   const user = req.user;
@@ -85,7 +98,11 @@ exports.postDeleteCartItem = (req, res, next) => {
     .then(() => {
       res.redirect("/cart");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postOrder = (req, res, next) => {
@@ -95,7 +112,7 @@ exports.postOrder = (req, res, next) => {
     .then((user) => {
       console.log(user);
       const products = user.cart.items.map((i) => {
-        return { qty: i.qty, product: {...i.productId._doc } };
+        return { qty: i.qty, product: { ...i.productId._doc } };
       });
       const order = new Order({
         user: {
@@ -107,28 +124,33 @@ exports.postOrder = (req, res, next) => {
       return order.save();
     })
 
-.then(()=>{
-  return req.user.clearCart();
-})
+    .then(() => {
+      return req.user.clearCart();
+    })
 
     .then(() => {
       res.redirect("/orders");
     })
     .catch((err) => {
-      console.log(err);
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
     });
 };
 
 exports.getOrders = (req, res, next) => {
-  Order.find({'user.userId': req.user._id})
+  Order.find({ "user.userId": req.user._id })
     .then((orders) => {
       // console.log(order);
       res.render("shop/orders", {
         path: "/orders",
         pageTitle: "Your Orders",
         orders: orders,
-
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };

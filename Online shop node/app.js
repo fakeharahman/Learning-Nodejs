@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const mondoDBstore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
-const flash= require('connect-flash')
+const flash = require("connect-flash");
 
 const errorController = require("./controllers/error");
 // const mongoConnect = require("./util/database").mongoConnect;
@@ -20,8 +20,7 @@ const store = new mondoDBstore({
   collection: "sessions",
 });
 
-const csrfProtection=csrf();
-
+const csrfProtection = csrf();
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -43,8 +42,13 @@ app.use(
   })
 );
 
-app.use(csrfProtection)
-app.use(flash())
+app.use(csrfProtection);
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.isAuth = req.session.isAuth;
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 
 app.use((req, res, next) => {
   if (!req.session.user) {
@@ -52,27 +56,32 @@ app.use((req, res, next) => {
   }
   User.findById(req.session.user._id)
     .then((user) => {
+      if (!user) {
+        return next();
+      }
       req.user = user;
       next();
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      next(new Error(err));
+    });
 });
-
-app.use((req,res, next)=>{
-  res.locals.isAuth=req.session.isAuth;
-  res.locals.csrfToken= req.csrfToken();
-  next();
-})
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+app.use("/500", errorController.get500);
 app.use(errorController.get404);
+app.use((error, req, res, next) => {
+  res.status(500).render("500", {
+    pageTitle: "Error Occured",
+    path: "/500",
+  });
+});
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
-    // User.findOne().then((user) => {
     //   if (!user) {
     //     const user = new User({
     //       name: "Fakeha",
@@ -81,7 +90,7 @@ mongoose
     //     });
     //     user.save();
     //   }
-    // });
+    // }); // User.findOne().then((user) => {
 
     app.listen(6969);
   })

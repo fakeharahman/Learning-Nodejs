@@ -27,7 +27,7 @@ exports.getLogin = (req, res, next) => {
       email: "",
       password: "",
     },
-    validationErrors: []
+    validationErrors: [],
   });
 };
 
@@ -47,7 +47,7 @@ exports.getSignup = (req, res, next) => {
       email: "",
       password: "",
     },
-    validationErrors: []
+    validationErrors: [],
   });
 };
 
@@ -62,7 +62,7 @@ exports.postLogin = (req, res, next) => {
       isAuth: false,
       errorMessage: errors.array()[0].msg,
       oldInput: { email: email, password: password },
-      validationErrors: errors.array()
+      validationErrors: errors.array(),
     });
   }
   User.findOne({ email: email })
@@ -73,9 +73,9 @@ exports.postLogin = (req, res, next) => {
           path: "/login",
           pageTitle: "Login",
           isAuth: false,
-          errorMessage: 'Invalid email or password',
+          errorMessage: "Invalid email or password",
           oldInput: { email: email, password: password },
-          validationErrors: [{param: 'email'}, {param: 'password'}]
+          validationErrors: [{ param: "email" }, { param: "password" }],
         });
       }
       bcrypt
@@ -93,9 +93,9 @@ exports.postLogin = (req, res, next) => {
             path: "/login",
             pageTitle: "Login",
             isAuth: false,
-            errorMessage: 'Invalid email or password',
+            errorMessage: "Invalid email or password",
             oldInput: { email: email, password: password },
-            validationErrors: [{param: 'email'}, {param: 'password'}]
+            validationErrors: [{ param: "email" }, { param: "password" }],
           });
         })
         .catch((err) => {
@@ -104,7 +104,11 @@ exports.postLogin = (req, res, next) => {
           res.redirect("/login");
         });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postSignup = (req, res, next) => {
@@ -124,7 +128,7 @@ exports.postSignup = (req, res, next) => {
         password: password,
         confirmPassword: req.body.confirmPassword,
       },
-      validationErrors: errors.array()
+      validationErrors: errors.array(),
     });
   }
 
@@ -149,7 +153,9 @@ exports.postSignup = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.log(err);
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
     });
 };
 
@@ -200,7 +206,11 @@ exports.postReset = (req, res, next) => {
           <p>Click on this <a href='http://localhost:6969/reset/${token}'>link </a> to reset the password to your account</p>`,
         });
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        const error = new Error(err);
+        error.setStatusCode = 500;
+        return next(error);
+      });
   });
 };
 
@@ -223,7 +233,11 @@ exports.getNewPassword = (req, res, next) => {
         passwordToken: token,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postNewPassword = (req, res, next) => {
@@ -249,5 +263,9 @@ exports.postNewPassword = (req, res, next) => {
     .then(() => {
       res.redirect("/login");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
