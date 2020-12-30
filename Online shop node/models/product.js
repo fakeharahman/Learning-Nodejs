@@ -1,73 +1,95 @@
-const fs = require("fs");
-const path = require("path");
-const Cart = require("./cart");
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+const productSchema = new Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  imageUrl: {
+    type: String,
+    required: true,
+  },
+  userId: {
+    type: mongoose.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+});
 
-const p = path.join(
-  path.dirname(process.mainModule.filename),
-  "data",
-  "products.json"
-);
+module.exports = mongoose.model("Product", productSchema);
 
-const getProductsFromFile = (cb) => {
-  fs.readFile(p, (err, fileContent) => {
-    if (err) {
-      cb([]);
-    } else {
-      cb(JSON.parse(fileContent));
-    }
-  });
-};
+// const getDb = require("../util/database").getDb;
+// const mongodb = require("mongodb");
 
-module.exports = class Product {
-  constructor(id, title, imageUrl, description, price) {
-    this.id = id;
-    this.title = title;
-    this.imageUrl = imageUrl;
-    this.description = description;
-    this.price = price;
-  }
+// class Product {
+//   constructor(title, price, description, imageUrl, id, userId) {
+//     this.title = title;
+//     this.price = price;
+//     this.description = description;
+//     this.imageUrl = imageUrl;
+//     this._id = id? new mongodb.ObjectID(id): null;
+//     this.userId=userId;
+//   }
 
-  save() {
-    getProductsFromFile((products) => {
-      if (this.id) {
-        const existingProdIndex = products.findIndex(
-          (prod) => prod.id === this.id
-        );
-        const updatedProducts = [...products];
-        updatedProducts[existingProdIndex] = this;
-        fs.writeFile(p, JSON.stringify(updatedProducts), (err) => {
-          console.log(err);
-        });
-      } else {
-        this.id = Math.random().toString();
-        products.push(this);
-        fs.writeFile(p, JSON.stringify(products), (err) => {
-          console.log(err);
-        });
-      }
-    });
-  }
+//   save() {
+//     const db = getDb();
+//     let dbOp;
+//     if (this._id) {
+//       dbOp = db
+//         .collection("products")
+//         .updateOne({ _id: this._id }, { $set: this });
+//     } else {
+//       dbOp = db.collection("products").insertOne(this);
+//     }
+//     return dbOp
+//       .then((res) => {
+//         console.log(res);
+//       })
+//       .catch((err) => console.log(err));
+//   }
 
-  static deleteById(id) {
-    getProductsFromFile((products) => {
-      const prod = products.find((prod) => prod.id === id);
-      const upadtedProducts = products.filter((prod) => id !== prod.id);
-      fs.writeFile(p, JSON.stringify(upadtedProducts), (err) => {
-        if (!err) {
-          Cart.deleteProduct(id, prod.price);
-        }
-      });
-    });
-  }
+//   static fetchAll() {
+//     const db = getDb();
+//     return db
+//       .collection("products")
+//       .find()
+//       .toArray()
+//       .then((prods) => {
+//         console.log(prods);
+//         return prods;
+//       })
+//       .catch((err) => console.log(err));
+//   }
+//   static findById(prodId) {
+//     const db = getDb();
+//     return db
+//       .collection("products")
+//       .find({ _id: new mongodb.ObjectID(prodId) })
+//       .next()
+//       .then((prod) => {
+//         console.log(prod);
+//         return prod;
+//       })
+//       .catch((err) => console.log(err));
+//   }
+//   static deleteById(prodId) {
+//     const db = getDb();
+//     return db
+//       .collection("products")
+//       .deleteOne({ _id: new mongodb.ObjectID(prodId) })
+//       .then(res=>{
+//         console.log('Deleted');
+//       })
+//       .catch(err=> console.log(err))
+//   }
+// }
 
-  static fetchAll(cb) {
-    getProductsFromFile(cb);
-  }
-
-  static findById(id, cb) {
-    getProductsFromFile((products) => {
-      const product = products.find((prod) => id === prod.id);
-      cb(product);
-    });
-  }
-};
+// module.exports = Product;

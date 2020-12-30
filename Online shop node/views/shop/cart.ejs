@@ -8,15 +8,23 @@
         <ul>
             <% for(let p of products){ %>
             <li>
-                <p><%= p.productData.title %> (<%= p.qty %> )</p>
+                <p><%= p.productId.title %> (<%= p.qty %> )</p>
                 <form action="/cart-delete-item" method="post">
-                    <input type="hidden" name="id" value="<%= p.productData.id %>">
+                    <input type="hidden" name="id" value="<%= p.productId._id %>">
                     <button class='btn' type="submit">Delete</button>
                 </form>
             </li>
             <% }%>
 
         </ul>
+        <hr>
+        <div class="centered">
+
+            <form action="/create-order" method="POST">
+                <!-- <input type="hidden" name=""> -->
+                <button class='btn' type="submit">Checkout</button>
+            </form>
+        </div>
         <% }else{ %>
         <h1>Nothing here! :(</h1>
         <% }%>
