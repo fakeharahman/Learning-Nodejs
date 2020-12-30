@@ -3,6 +3,7 @@ const User = require("../models/users");
 const nodemailer = require("nodemailer");
 const sendgrid = require("nodemailer-sendgrid");
 const crypto = require("crypto");
+const { validationResult } = require("express-validator/check");
 
 const transporter = nodemailer.createTransport(
   sendgrid({
@@ -22,6 +23,11 @@ exports.getLogin = (req, res, next) => {
     path: "/login",
     pageTitle: "Login",
     errorMessage: message,
+    oldInput: {
+      email: "",
+      password: "",
+    },
+    validationErrors: []
   });
 };
 
@@ -37,17 +43,40 @@ exports.getSignup = (req, res, next) => {
     pageTitle: "Signup",
     isAuth: false,
     errorMessage: message,
+    oldInput: {
+      email: "",
+      password: "",
+    },
+    validationErrors: []
   });
 };
 
 exports.postLogin = (req, res, next) => {
+  const errors = validationResult(req);
   const email = req.body.email;
   const password = req.body.password;
+  if (!errors.isEmpty()) {
+    return res.status(422).render("auth/login", {
+      path: "/login",
+      pageTitle: "Login",
+      isAuth: false,
+      errorMessage: errors.array()[0].msg,
+      oldInput: { email: email, password: password },
+      validationErrors: errors.array()
+    });
+  }
   User.findOne({ email: email })
     .then((user) => {
       if (!user) {
-        req.flash("error", "Invalid email or password");
-        return res.redirect("/login");
+        // req.flash("error", "Invalid email or password");
+        return res.status(422).render("auth/login", {
+          path: "/login",
+          pageTitle: "Login",
+          isAuth: false,
+          errorMessage: 'Invalid email or password',
+          oldInput: { email: email, password: password },
+          validationErrors: [{param: 'email'}, {param: 'password'}]
+        });
       }
       bcrypt
         .compare(password, user.password)
@@ -60,8 +89,14 @@ exports.postLogin = (req, res, next) => {
               res.redirect("/");
             });
           }
-          req.flash("error", "Invalid email or password");
-          return res.redirect("/login");
+          return res.status(422).render("auth/login", {
+            path: "/login",
+            pageTitle: "Login",
+            isAuth: false,
+            errorMessage: 'Invalid email or password',
+            oldInput: { email: email, password: password },
+            validationErrors: [{param: 'email'}, {param: 'password'}]
+          });
         })
         .catch((err) => {
           console.log(err);
@@ -73,41 +108,49 @@ exports.postLogin = (req, res, next) => {
 };
 
 exports.postSignup = (req, res, next) => {
+  const errors = validationResult(req);
+  console.log(errors.array());
   const email = req.body.email;
   const password = req.body.password;
   console.log(email, password);
-  const confirmPassword = req.body.confirmPassword;
-  User.findOne({ email: email })
-    .then((userDoc) => {
-      if (userDoc) {
-        req.flash("error", "Email exists");
-        return res.redirect("/signup");
-      }
-      return bcrypt
-        .hash(password, 12)
-        .then((hashedPass) => {
-          const user = new User({
-            email: email,
-            password: hashedPass,
-            cart: { items: [] },
-          });
-          return user.save();
-        })
-        .then(() => {
-          res.redirect("/login");
-          return transporter.sendMail({
-            to: email,
-            from: "fakeha126@gmail.com",
-            subject: "yo",
-            html:
-              "<h4> Hey Fakeha, </h4> <p> Thanks for being in my life. You are the best sister ever. Mama precious little boy, Tanzii </p>",
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+  if (!errors.isEmpty()) {
+    return res.status(422).render("auth/signup", {
+      path: "/signup",
+      pageTitle: "Signup",
+      isAuth: false,
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+        confirmPassword: req.body.confirmPassword,
+      },
+      validationErrors: errors.array()
+    });
+  }
+
+  bcrypt
+    .hash(password, 12)
+    .then((hashedPass) => {
+      const user = new User({
+        email: email,
+        password: hashedPass,
+        cart: { items: [] },
+      });
+      return user.save();
     })
-    .catch((err) => console.log(err));
+    .then(() => {
+      res.redirect("/login");
+      return transporter.sendMail({
+        to: email,
+        from: "fakeha126@gmail.com",
+        subject: "yo",
+        html:
+          "<h4> Hey Fakeha, </h4> <p> Thanks for being in my life. You are the best sister ever. Mama precious little boy, Tanzii </p>",
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.postLogout = (req, res, next) => {
