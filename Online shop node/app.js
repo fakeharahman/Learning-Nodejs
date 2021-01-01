@@ -7,6 +7,7 @@ const session = require("express-session");
 const mondoDBstore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
 const flash = require("connect-flash");
+const { v4: uuidv4 } = require("uuid");
 
 const errorController = require("./controllers/error");
 // const mongoConnect = require("./util/database").mongoConnect;
@@ -30,9 +31,32 @@ const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 
 const User = require("./models/users");
+const multer = require("multer");
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, uuidv4() + "-" + file.originalname);
+  },
+});
+
+const filetype = (req, file, cb) => {
+  if (
+    file.mimetype == "image/png" ||
+    file.mimetype == "image/jpg" ||
+    file.mimetype == "image/jpeg"
+  ) {
+    return cb(null, true);
+  }
+  return cb(null, false);
+};
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, "public"))); //to add css files
+app.use(multer({ storage: fileStorage, fileFilter: filetype }).single("image"));
+app.use(express.static(path.join(__dirname, "public"))); //to add css files/ static files
+app.use('/images',express.static(path.join(__dirname, "images"))); //to add images / static files 
+// if req starts with /images then serve statically
 app.use(
   session({
     secret: "my secret token",
