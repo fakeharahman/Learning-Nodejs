@@ -19,9 +19,25 @@ exports.getAddProduct = (req, res, next) => {
 exports.postAddProduct = (req, res, next) => {
   const errors = validationResult(req);
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const image = req.file;
   const price = req.body.price;
   const description = req.body.description;
+  console.log(image);
+  if (!image) {
+    return res.status(422).render("admin/edit-product", {
+      pageTitle: "Add Product",
+      path: "/admin/add-product",
+      editing: false,
+      hasError: true,
+      errorMessage: "Invalid image",
+      validationErrors: [],
+      product: {
+        title: title,
+        description: description,
+        price: price,
+      },
+    });
+  }
   if (!errors.isEmpty()) {
     return res.status(422).render("admin/edit-product", {
       pageTitle: "Add Product",
@@ -34,10 +50,10 @@ exports.postAddProduct = (req, res, next) => {
         title: title,
         description: description,
         price: price,
-        imageUrl: imageUrl,
       },
     });
   }
+  const imageUrl = image.path;
   const product = new Product({
     // _id: new Mongoose.Types.ObjectId("5fad1392f4c03e3e30f4acd5"),
     title: title,
@@ -106,7 +122,7 @@ exports.getEditProduct = (req, res, next) => {
 exports.postEditProduct = (req, res, next) => {
   const id = req.body.id;
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const image = req.file;
   const price = req.body.price;
   const description = req.body.description;
   const errors = validationResult(req);
@@ -122,11 +138,11 @@ exports.postEditProduct = (req, res, next) => {
         title: title,
         description: description,
         price: price,
-        imageUrl: imageUrl,
         _id: id,
       },
     });
   }
+
   Product.findById(id)
     .then((prod) => {
       if (prod.userId.toString() !== req.user._id.toString()) {
@@ -134,7 +150,9 @@ exports.postEditProduct = (req, res, next) => {
       }
       prod.title = title;
       prod.price = price;
-      prod.imageUrl = imageUrl;
+      if (image) {
+        prod.imageUrl = image.path;
+      }
       prod.description = description;
       return prod
         .save()

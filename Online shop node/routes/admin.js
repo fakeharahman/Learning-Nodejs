@@ -20,7 +20,6 @@ router.post(
   isAuth,
   [
     body("title").isLength({ min: 3 }).trim(),
-    body("imageUrl").isURL(),
     body("price").isFloat(),
     body("description").isLength({ min: 5 }).trim(),
   ],
@@ -33,7 +32,6 @@ router.post(
   "/edit-product",
   [
     body("title").isLength({ min: 3 }).trim(),
-    body("imageUrl").isURL(),
     body("price").isFloat(),
     body("description").isLength({ min: 5 }).trim(),
   ],
