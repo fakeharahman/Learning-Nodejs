@@ -2,6 +2,7 @@
 const { validationResult } = require("express-validator/check");
 // const Mongoose = require("mongoose");
 const Product = require("../models/product");
+const fileHelper = require("../util/file");
 
 exports.getAddProduct = (req, res, next) => {
   if (!req.session.isAuth) {
@@ -151,6 +152,7 @@ exports.postEditProduct = (req, res, next) => {
       prod.title = title;
       prod.price = price;
       if (image) {
+        fileHelper.deleteFile(prod.imageUrl);
         prod.imageUrl = image.path;
       }
       prod.description = description;
@@ -175,9 +177,22 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   console.log(req.body.id);
-  Product.deleteOne({ _id: req.body.id, userId: req.user._id }).then(() => {
-    res.redirect("/admin/products");
-  });
+  Product.findById(req.body.id)
+    .then((prod) => {
+      if (!prod) {
+        return next(new Error("Product not found"));
+      }
+      fileHelper.deleteFile(prod.imageUrl);
+      return Product.deleteOne({ _id: req.body.id, userId: req.user._id })
+    })
+    .then(() => {
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      const error = new Error(err);
+      error.setStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getProducts = (req, res, next) => {
