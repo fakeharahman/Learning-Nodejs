@@ -175,23 +175,25 @@ exports.postEditProduct = (req, res, next) => {
     });
 };
 
-exports.postDeleteProduct = (req, res, next) => {
-  console.log(req.body.id);
-  Product.findById(req.body.id)
+exports.deleteProduct = (req, res, next) => {
+  // console.log(req);
+  Product.findById(req.params.id)
     .then((prod) => {
       if (!prod) {
         return next(new Error("Product not found"));
       }
       fileHelper.deleteFile(prod.imageUrl);
-      return Product.deleteOne({ _id: req.body.id, userId: req.user._id })
+      return Product.deleteOne({ _id: req.params.id, userId: req.user._id })
     })
     .then(() => {
-      res.redirect("/admin/products");
+      // res.redirect("/admin/products"); 
+      res.status(200).json({message: "Success!"})
     })
     .catch((err) => {
-      const error = new Error(err);
-      error.setStatusCode = 500;
-      return next(error);
+      // const error = new Error(err);
+      // error.setStatusCode = 500;
+      // return next(error);
+      res.status(500).json({message: 'Failed :('})
     });
 };
 
