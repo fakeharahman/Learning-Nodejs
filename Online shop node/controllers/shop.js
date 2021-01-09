@@ -3,6 +3,8 @@ const Order = require("../models/order");
 const fs = require("fs");
 const path = require("path");
 const pdfkit = require("pdfkit");
+const Stripe = require('stripe');
+const stripe = Stripe('sk_test_51HKjciKrhh3dM9Gdgt9cCbRBEK5u76Ufl38QJnwicF3SjPzUUfXelOiAiVU06K71lpaDDk61F0gf878sUXFefAnH00YwKFDgK9');
 // const { deleteProduct } = require("../models/cart");
 
 const ITEMS_PER_PAGE = 1;
@@ -190,6 +192,54 @@ exports.getOrders = (req, res, next) => {
       return next(error);
     });
 };
+
+exports.getCheckout=(req, res, next)=>{
+  let products;
+  let total=0;
+  req.user
+  .populate("cart.items.productId")
+  .execPopulate()
+  .then((user) => {
+    products = user.cart.items;
+    total=0;
+    products.forEach(prod=> total+=prod.productId.price*prod.qty);
+    return stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: products.map(p=>{
+        return  {
+          price_data: {
+            currency: 'inr',
+            product_data: {
+              name: p.productId.title,
+              // amount: p.productId.price*100
+            },
+            unit_amount: p.productId.price*100,
+          },
+          quantity: p.qty,
+        }
+      }),
+      mode: 'payment',
+      success_url: req.protocol+'://'+req.get('host')+'/checkout/success', // https://localhost:6969/checkout/success
+      cancel_url: req.protocol+'://'+req.get('host')+'/checkout/cancel',
+    })
+   
+  }).then(session=>{
+    res.render("shop/checkout", {
+      path: "/checkout",
+      pageTitle: "Checkout",
+      products: products,
+      totalSum: total,
+      sessionId: session.id
+    })
+  })
+  .catch((err) => {
+    console.log(err);
+    const error = new Error(err);
+    error.setStatusCode = 500;
+    return next(error);
+  });
+}
+
 exports.getInvoice = (req, res, next) => {
   const orderId = req.params.orderId;
   Order.findById(orderId)
