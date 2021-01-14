@@ -92,6 +92,17 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
+
+  // let file=fs.readFileSync(path.join("delte", "s105qK9Hye11.json"));
+  // console.log(file);
+  // const ffile=JSON.parse(file);
+  // const newData=ffile.filter(d=> d.country==='IN');
+  // fs.writeFile(path.join("delte", "s105qK9Hye11.json"), JSON.stringify(newData), function writeJSON(err) {
+  //   if (err) return console.log(err);
+  //   // console.log(JSON.stringify(file));
+  //   // console.log('writing to ' + fileName);
+  // });
+
   console.log(req.user);
   req.user
     .populate("cart.items.productId")
