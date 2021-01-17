@@ -1,5 +1,18 @@
 exports.getFeed = (req, res, next) => {
-  res.status(200).json({ posts: [{ "First Post": "this first post" }] });
+  res.status(200).json({
+    posts: [
+      {
+        _id: "1",
+        title: "First Post",
+        content: "This is the first post!",
+        imageUrl: "/images/other.jpg",
+        creator: {
+          name: "Fakeha",
+        },
+        createdAt: new Date(),
+      },
+    ],
+  });
 };
 
 exports.postPost = (req, res, next) => {
@@ -10,6 +23,12 @@ exports.postPost = (req, res, next) => {
     .status(201) //resource successfully created
     .json({
       message: "Created Post!",
-      post: { id: new Date().toISOString(), title: title, content: content },
+      post: {
+        _id: new Date().toISOString(),
+        title: title,
+        content: content,
+        createdAt: new Date(),
+        creator: { name: "Fakeha" },
+      },
     });
 };
