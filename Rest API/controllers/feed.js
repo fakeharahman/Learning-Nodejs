@@ -2,14 +2,32 @@ const { validationResult } = require("express-validator");
 const Post = require("../model/post");
 const fs = require("fs");
 const path = require("path");
+const { response } = require("express");
+
+const POSTS_PER_PAGE = 2;
 
 exports.getFeed = (req, res, next) => {
+  const page = req.query.page || 1;
   Post.find()
-    .then((posts) => {
-      // console.log(posts);
-      return res.status(200).json({
-        posts: posts,
-      });
+  .countDocuments()
+  .then((total) => {
+    console.log(req.query);
+    Post.find()
+        .skip(POSTS_PER_PAGE * (page - 1))
+        .limit(POSTS_PER_PAGE)
+        .then((posts) => {
+          // console.log(posts);
+          return res.status(200).json({
+            posts: posts,
+            totalItems: total
+          });
+        })
+        .catch((err) => {
+          if (!err.statusCode) {
+            err.statusCode = 500;
+          }
+          next(err);
+        });
     })
     .catch((err) => {
       if (!err.statusCode) {
@@ -92,7 +110,7 @@ exports.putPost = (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
   let imageUrl = req.body.image;
-  
+
   if (req.file) {
     imageUrl = req.file.path.replace("\\", "/");
   }
@@ -122,6 +140,30 @@ exports.putPost = (req, res, next) => {
         message: "Post Updated successfully!",
         post: post,
       });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
+
+exports.deletePost = (req, res, next) => {
+  const id = req.params.id;
+  Post.findById(id)
+    .then((post) => {
+      if (!post) {
+        const error = new Error("No Post Found!");
+        error.statusCode = 404;
+        throw error;
+      }
+      const imgUrl = post.imageUrl;
+      clearImage(imgUrl);
+      return Post.findByIdAndDelete(id);
+    })
+    .then((response) => {
+      res.status(200).json({ message: "Deleted Post" });
     })
     .catch((err) => {
       if (!err.statusCode) {
