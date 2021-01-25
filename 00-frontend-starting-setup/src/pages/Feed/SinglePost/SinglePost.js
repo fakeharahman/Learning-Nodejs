@@ -28,7 +28,7 @@ class SinglePost extends Component {
           author: resData.post.creator.name,
           date: new Date(resData.post.createdAt).toLocaleDateString('en-US'),
           content: resData.post.content,
-          image: "http://localhost:7070"+resData.post.imageUrl
+          image: "http://localhost:7070/"+resData.post.imageUrl
         });
       })
       .catch(err => {
