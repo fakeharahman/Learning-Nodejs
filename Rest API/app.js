@@ -2,11 +2,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
 
-const feedRoutes = require("./routes/feed");
-const authRoutes = require("./routes/auth");
+
 const mongoose = require("mongoose");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
+const { graphqlHTTP } = require("express-graphql");
+
+const graphQlSchema= require("./graphql/schema")
+const graphQlResolver= require("./graphql/resolvers")
 
 const app = express();
 
@@ -37,10 +40,31 @@ app.use((req, res, next) => {
     "GET, PUT, POST, DELETE, PATCH"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if(req.method==="OPTIONS"){
+    return res.sendStatus(200);
+  }
   next();
 });
-app.use("/feed", feedRoutes);
-app.use("/auth", authRoutes);
+
+app.use("/graphql", graphqlHTTP({
+  schema: graphQlSchema,
+  rootValue: graphQlResolver,
+  graphiql: true,
+  customFormatErrorFn(err){
+    if(!err.originalError){
+      return err;
+    }
+    const data= err.originalError.data;
+    const code=err.originalError.code || 500;
+    const message=err.message || "Error occured";
+    return {
+      message: message,
+      status: code,
+      data: data
+    }
+  }
+}))
+
 app.use((err, req, res, next) => {
   console.log(err);
   const status = err.statusCode || 500;
@@ -54,10 +78,8 @@ mongoose
     "mongodb+srv://fakeha:14789632@cluster0.4pkpi.mongodb.net/messages?retryWrites=true&w=majority"
   )
   .then(() => {
-   const server= app.listen(7070);
-    const io=require("./socket").init(server);
-    io.on("connection", socket=>{
-      console.log("Connected");
-    })
+  app.listen(7070);
+
+
   })
   .catch((err) => console.log(err));
