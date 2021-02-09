@@ -12,7 +12,7 @@ import SinglePostPage from "./pages/Feed/SinglePost/SinglePost";
 import LoginPage from "./pages/Auth/Login";
 import SignupPage from "./pages/Auth/Signup";
 import "./App.css";
-import { email } from "./util/validators";
+// import { email } from "./util/validators";
 
 class App extends Component {
   state = {
@@ -60,36 +60,47 @@ class App extends Component {
   loginHandler = (event, authData) => {
     event.preventDefault();
     this.setState({ authLoading: true });
-    fetch("http://localhost:7070/auth/login", {
+    const query={
+      query: `
+       {
+        login(email: "${authData.email}", password: "${authData.password}") {
+          userId
+          token
+        }
+      }
+      `
+    }
+    fetch("http://localhost:7070/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        email: authData.email,
-        password: authData.password,
-      }),
+      body: JSON.stringify(query),
     })
       .then((res) => {
-        if (res.status === 422) {
-          throw new Error("Validation failed.");
-        }
-        if (res.status !== 200 && res.status !== 201) {
-          console.log("Error!");
-          throw new Error("Could not authenticate you!");
-        }
+       
         return res.json();
       })
       .then((resData) => {
         console.log(resData);
+        if (resData.errors && resData.errors.status === 422) {
+          throw new Error(
+            "Validation failed."
+          );
+        }
+        if(resData.errors){
+          throw new Error(
+            "An error Occured"
+          );
+        }
         this.setState({
           isAuth: true,
-          token: resData.token,
+          token: resData.data.login.token,
           authLoading: false,
-          userId: resData.userId,
+          userId: resData.data.login.userId,
         });
-        localStorage.setItem("token", resData.token);
-        localStorage.setItem("userId", resData.userId);
+        localStorage.setItem("token", resData.data.login.token);
+        localStorage.setItem("userId", resData.data.login.userId);
         const remainingMilliseconds = 60 * 60 * 1000;
         const expiryDate = new Date(
           new Date().getTime() + remainingMilliseconds
