@@ -1,16 +1,16 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
-
+const fs = require("fs");
 
 const mongoose = require("mongoose");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const { graphqlHTTP } = require("express-graphql");
 
-const graphQlSchema= require("./graphql/schema")
-const graphQlResolver= require("./graphql/resolvers")
-const isAuth=require("./middleware/is-auth")
+const graphQlSchema = require("./graphql/schema");
+const graphQlResolver = require("./graphql/resolvers");
+const isAuth = require("./middleware/is-auth");
 
 const app = express();
 
@@ -41,38 +41,51 @@ app.use((req, res, next) => {
     "GET, PUT, POST, DELETE, PATCH"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if(req.method==="OPTIONS"){
+  if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
   next();
 });
-
 app.use(isAuth);
-
-app.use("/graphql", graphqlHTTP({
-  schema: graphQlSchema,
-  rootValue: graphQlResolver,
-  graphiql: true,
-  customFormatErrorFn(err){
-    if(!err.originalError){
-      return err;
-    }
-    const data= err.originalError.data;
-    const code=err.originalError.code || 500;
-    const message=err.message || "Error occured";
-    return {
-      message: message,
-      status: code,
-      data: data
-    }
+app.put("/post-img", (req, res, next) => {
+  if (!req.file) {
+    return res.status(200).json({ message: "no file provided" });
   }
-}))
+  if(req.body.oldPath){
+    clearImage(req.body.oldPath)
+  }
+  return res.status(201).json({message: "file stored", filePath: req.file.path})
+});
+
+
+
+app.use(
+  "/graphql",
+  graphqlHTTP({
+    schema: graphQlSchema,
+    rootValue: graphQlResolver,
+    graphiql: true,
+    customFormatErrorFn(err) {
+      if (!err.originalError) {
+        return err;
+      }
+      const data = err.originalError.data;
+      const code = err.originalError.code || 500;
+      const message = err.message || "Error occured";
+      return {
+        message: message,
+        status: code,
+        data: data,
+      };
+    },
+  })
+);
 
 app.use((err, req, res, next) => {
   console.log(err);
   const status = err.statusCode || 500;
   const message = err.message;
-  const data=err.data||[];
+  const data = err.data || [];
   res.status(status).json({ message: message, data: data });
 });
 
@@ -81,8 +94,11 @@ mongoose
     "mongodb+srv://fakeha:14789632@cluster0.4pkpi.mongodb.net/messages?retryWrites=true&w=majority"
   )
   .then(() => {
-  app.listen(7070);
-
-
+    app.listen(7070);
   })
   .catch((err) => console.log(err));
+
+const clearImage = (filePath) => {
+  const p = path.join(__dirname, "..", filePath);
+  fs.unlink(p, (err) => console.log(err));
+};
